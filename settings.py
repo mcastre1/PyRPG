@@ -20,3 +20,4 @@ GRIDHEIGHT = HEIGHT / TILESIZE
 
 # Player Settings
 PLAYER_SPEED = 1
+PLAYER_IMG = 'char_south.jpg'
