@@ -2,17 +2,28 @@ import pygame as pg
 from settings import *
 vec = pg.math.Vector2
 
+from spriteSheet import *
+
 class Player(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.next_move = pg.time.get_ticks() + 100
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = game.player_img
-        self.rect = self.image.get_rect()
+        #self.image = game.player_img
+        #self.rect = self.image.get_rect()
         self.dx, self.dy = 0, 0
         self.x = x
         self.y = y
+
+        sprite_sheet_image = pg.image.load('./img/char_right.png').convert_alpha()
+        sprite_sheet = SpriteSheet(sprite_sheet_image)
+        frame0 = sprite_sheet.get_image(0, 32, 32, 1, BLACK)
+        self.image = frame0
+        self.rect = self.image.get_rect()
+
+    def get_sprite_frame():
+        pass
     
     def get_keys(self):
         self.dx, self.dy = 0, 0
