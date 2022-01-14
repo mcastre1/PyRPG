@@ -16,18 +16,35 @@ class Player(pg.sprite.Sprite):
         self.x = x
         self.y = y
 
+        self.direction = "Standing"
         sprite_sheet_image = pg.image.load('./img/char_right.png').convert_alpha()
-        sprite_sheet = SpriteSheet(sprite_sheet_image)
-        frame0 = sprite_sheet.get_image(0, 32, 32, 1, BLACK)
+        self.sprite_sheet = SpriteSheet(sprite_sheet_image)
+        frame0 = self.sprite_sheet.get_image(0, 32, 32, 1, BLACK)
         self.image = frame0
         self.rect = self.image.get_rect()
+        
+        self.animation_list = []
+        self.animation_steps = 3
+        self.animation_cooldown = 100
+        self.last_update = pg.time.get_ticks()
+        self.frame = 0
+
+        self.animate_sprite()
+
 
     def get_sprite_frame():
         pass
     
+    def animate_sprite(self):
+        for x in range(self.animation_steps):
+            self.animation_list.append(self.sprite_sheet.get_image(x, 32, 32, 1, BLACK))
+
     def get_keys(self):
         self.dx, self.dy = 0, 0
         keys = pg.key.get_pressed()
+
+        current_time = pg.time.get_ticks()
+        
 
         if (keys[pg.K_UP] or keys[pg.K_w]) and (keys[pg.K_RIGHT] or keys[pg.K_d]):
             self.dy -= 1
@@ -45,6 +62,19 @@ class Player(pg.sprite.Sprite):
             self.dx -= 1
         elif keys[pg.K_RIGHT] or keys[pg.K_d]:
             self.dx += 1
+            if current_time - self.last_update >= self.animation_cooldown:
+                self.frame += 1
+                self.last_update = current_time
+
+                if self.frame >= len(self.animation_list):
+                    self.frame = 0
+
+                print(len(self.animation_list))
+                print(self.frame)
+                self.image = self.animation_list[self.frame]
+
+                
+
         elif keys[pg.K_UP] or keys[pg.K_w]:
             self.dy -= 1
         elif keys[pg.K_DOWN] or keys[pg.K_s]:
@@ -61,9 +91,9 @@ class Player(pg.sprite.Sprite):
 
             # Ticking down movement depending on vertical or diagonal movement.
             if not dx == 0 and not dy == 0:  # Diagonal movement
-                self.next_move = pg.time.get_ticks() + 200
+                self.next_move = pg.time.get_ticks() + 500
             else:                            # Vertical movement
-                self.next_move = pg.time.get_ticks() + 100
+                self.next_move = pg.time.get_ticks() + 300
             
     def collide_with_walls(self, dir):
         if dir == 'x':
@@ -88,6 +118,7 @@ class Player(pg.sprite.Sprite):
     def update(self):
         self.get_keys()
         self.move(self.dx, self.dy)
+
         self.rect.x = self.x * TILESIZE
         self.collide_with_walls('x')
         
