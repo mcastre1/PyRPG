@@ -15,8 +15,9 @@ class Player(pg.sprite.Sprite):
         self.dx, self.dy = 0, 0
         self.x = x
         self.y = y
+        self.next_move = pg.time.get_ticks()
 
-        self.direction = "Standing"
+        self.direction = "standing"
         sprite_sheet_image = pg.image.load('./img/char_right.png').convert_alpha()
         self.sprite_sheet = SpriteSheet(sprite_sheet_image)
         frame0 = self.sprite_sheet.get_image(0, 32, 32, 1, BLACK)
@@ -25,11 +26,14 @@ class Player(pg.sprite.Sprite):
         
         self.animation_list = []
         self.animation_steps = 3
-        self.animation_cooldown = 100
+        self.animation_cooldown = 50
         self.last_update = pg.time.get_ticks()
         self.frame = 0
 
         self.animate_sprite()
+
+    def set_animation(self):
+        pass
 
 
     def get_sprite_frame():
@@ -42,26 +46,30 @@ class Player(pg.sprite.Sprite):
     def get_keys(self):
         self.dx, self.dy = 0, 0
         keys = pg.key.get_pressed()
-
         current_time = pg.time.get_ticks()
-        
 
         if (keys[pg.K_UP] or keys[pg.K_w]) and (keys[pg.K_RIGHT] or keys[pg.K_d]):
             self.dy -= 1
             self.dx += 1
+            self.direction = "diagonal"
         elif (keys[pg.K_UP] or keys[pg.K_w]) and (keys[pg.K_LEFT] or keys[pg.K_a]):
             self.dx -= 1
             self.dy -= 1
+            self.direction = "diagonal"
         elif (keys[pg.K_DOWN] or keys[pg.K_s]) and (keys[pg.K_LEFT] or keys[pg.K_a]):
             self.dx -= 1
             self.dy += 1
+            self.direction = "diagonal"
         elif (keys[pg.K_DOWN] or keys[pg.K_s]) and (keys[pg.K_RIGHT] or keys[pg.K_d]):
             self.dy += 1
             self.dx += 1
+            self.direction = "diagonal"
         elif keys[pg.K_LEFT] or keys[pg.K_a]:
             self.dx -= 1
+            self.direction = "straight"
         elif keys[pg.K_RIGHT] or keys[pg.K_d]:
             self.dx += 1
+            self.direction = "straight"
             if current_time - self.last_update >= self.animation_cooldown:
                 self.frame += 1
                 self.last_update = current_time
@@ -77,23 +85,34 @@ class Player(pg.sprite.Sprite):
 
         elif keys[pg.K_UP] or keys[pg.K_w]:
             self.dy -= 1
+            self.direction = "straight"
         elif keys[pg.K_DOWN] or keys[pg.K_s]:
             self.dy += 1
-        
-    def set_next_move(self, tick=0):
-            self.next_move = pg.time.get_ticks() + tick
+            self.direction = "straight"
+    
+    def get_mv_exhaust(self, dir):
+        if dir == 'straight':
+            return int(STRAIGHT_MV_EXHAUST)
+        elif dir == "diagonal":
+            return int(DIAG_MV_EXHAUST)
+        return 0
+
 
     def move(self, dx=0, dy=0):
-        if pg.time.get_ticks() >= self.next_move: 
-        
+        current_time = pg.time.get_ticks()
+
+        if current_time - self.next_move >= 0:
             self.x += dx
             self.y += dy
 
-            # Ticking down movement depending on vertical or diagonal movement.
-            if not dx == 0 and not dy == 0:  # Diagonal movement
-                self.next_move = pg.time.get_ticks() + 500
-            else:                            # Vertical movement
-                self.next_move = pg.time.get_ticks() + 300
+            self.rect.x = self.x * TILESIZE
+            self.collide_with_walls('x')
+            self.rect.y = self.y * TILESIZE
+            self.collide_with_walls('y')
+
+            self.next_move = pg.time.get_ticks() + self.get_mv_exhaust(self.direction)
+
+        
             
     def collide_with_walls(self, dir):
         if dir == 'x':
@@ -118,13 +137,6 @@ class Player(pg.sprite.Sprite):
     def update(self):
         self.get_keys()
         self.move(self.dx, self.dy)
-
-        self.rect.x = self.x * TILESIZE
-        self.collide_with_walls('x')
-        
-
-        self.rect.y = self.y * TILESIZE
-        self.collide_with_walls('y')
         
 
 class Wall(pg.sprite.Sprite):
